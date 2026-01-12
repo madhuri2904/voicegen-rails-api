@@ -14,7 +14,7 @@ export default class extends Controller {
     const formData = new FormData(this.formTarget)
     this.showStatus("Generating voice...")
     
-    fetch("/voice_generations", {
+    fetch("/api/voice_generations", {
       method: "POST",
       body: formData
     })
@@ -31,7 +31,7 @@ export default class extends Controller {
   
   pollStatus(generationId) {
     this.pollInterval = setInterval(() => {
-      fetch(`/api/v1/voice_generations/${generationId}/status`)
+      fetch(`/api/voice_generations/${generationId}/status`)
         .then(response => response.json())
         .then(data => {
           this.updateStatus(data.status, data.audio_url, data.error)

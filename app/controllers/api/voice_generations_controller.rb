@@ -9,8 +9,8 @@ class Api::VoiceGenerationsController < ApplicationController
     render json: {
       id: voice_gen.id,
       status: voice_gen.status,
-      url: api_v1_voice_generation_url(voice_gen)
-    }, status: :accepted
+      url: api_voice_generation_url(voice_gen)
+    }, status: :ok
   end
   
   def show
@@ -20,7 +20,7 @@ class Api::VoiceGenerationsController < ApplicationController
       }
     else
       render json: { status: @voice_gen.status, error: @voice_gen.error_message }, 
-             status: :processing
+             status: :ok
     end
   end
   
@@ -44,6 +44,6 @@ class Api::VoiceGenerationsController < ApplicationController
   end
   
   def authenticate_request
-    head :unauthorized unless request.headers["X-API-Key"] == ENV["API_AUTH_KEY"]
+    head :unauthorized unless request.headers["X-API-Key"] == Rails.application.credentials.dig(:elevenlabs, :api_key)
   end
 end

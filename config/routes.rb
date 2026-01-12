@@ -1,10 +1,8 @@
 Rails.application.routes.draw do
   namespace :api do
-    namespace :v1 do
-      resources :voice_generations, only: [:create, :show] do
-        member do
-          get :status
-        end
+    resources :voice_generations, only: [:create, :show] do
+      member do
+        get :status
       end
     end
   end

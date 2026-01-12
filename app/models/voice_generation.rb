@@ -1,6 +1,6 @@
 class VoiceGeneration < ApplicationRecord
   validates :text, presence: true, length: { maximum: 10_000 }
-  validates :voice_id, presence: true, length: { is: 36 } # ElevenLabs voice ID format
+  validates :voice_id, presence: true, length: { is: 36 }
   
   has_one_attached :audio_file
   
