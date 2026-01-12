@@ -1,0 +1,46 @@
+<div class="container mx-auto p-8 max-w-4xl">
+  <h1 class="text-4xl font-bold mb-8 text-center">🎙️ Voice Generation API</h1>
+  
+  <%= form_with model: @voice_generation || VoiceGeneration.new, 
+                url: voice_generations_path, 
+                id: "voice-form",
+                data: { 
+                  turbo: false,
+                  controller: "voice-generator",
+                  action: "submit->voice-generator#generate"
+                } do |f| %>
+    
+    <div class="mb-8">
+      <%= f.text_area :text, 
+                      placeholder: "Enter text to convert to speech...",
+                      class: "w-full p-4 border border-gray-300 rounded-lg resize-vertical min-h-[120px] text-lg",
+                      rows: 4 %>
+    </div>
+    
+    <div class="flex gap-4 mb-8">
+      <%= f.hidden_field :voice_id, value: "21m00Tcm4TlvDq8ikWAM" %>
+      <button type="submit" 
+              class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              data-action="click->voice-generator#generate">
+        🎙️ Generate Voice
+      </button>
+    </div>
+  <% end %>
+  
+  <div id="status-container" class="mb-8 hidden">
+    <div class="bg-gray-50 p-6 rounded-lg border">
+      <div id="status-message" class="text-lg font-semibold mb-4"></div>
+      <div id="audio-player-container" class="hidden">
+        <audio id="audio-player" controls class="w-full mb-4"></audio>
+        <a id="download-link" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 inline-block" target="_blank">
+          💾 Download MP3
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <%= link_to "📜 View History", history_voice_generations_path, 
+              class: "inline-block bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors" %>
+</div>
+
+<%= render "shared/history_table" %>

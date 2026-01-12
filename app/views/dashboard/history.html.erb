@@ -1,0 +1,41 @@
+<div class="container mx-auto p-8 max-w-4xl">
+  <h1 class="text-4xl font-bold mb-8">📜 Voice Generation History</h1>
+  
+  <div class="overflow-x-auto">
+    <table class="w-full bg-white shadow-md rounded-lg">
+      <thead>
+        <tr class="bg-gray-50">
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Text Preview</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% VoiceGeneration.recent.each do |vg| %>
+          <tr class="border-b">
+            <td class="px-6 py-4"><%= vg.created_at.strftime("%b %d, %H:%M") %></td>
+            <td class="px-6 py-4 max-w-xs truncate"><%= vg.text.truncate(50) %></td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-1 text-xs rounded-full <%= status_badge_class(vg.status) %>">
+                <%= vg.status.titleize %>
+              </span>
+            </td>
+            <td class="px-6 py-4"><%= vg.duration || "N/A" %>s</td>
+            <td class="px-6 py-4">
+              <% if vg.completed? && vg.audio_file.attached? %>
+                <%= link_to "🎧 Play", rails_blob_url(vg.audio_file, expires_in: 1.hour), 
+                           class: "text-blue-600 hover:underline mr-2" %>
+                <%= link_to "💾 Download", rails_blob_url(vg.audio_file, expires_in: 1.hour), 
+                           class: "text-green-600 hover:underline" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  
+  <%= link_to "← Back to Generator", root_path, class: "mt-8 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700" %>
+</div>
