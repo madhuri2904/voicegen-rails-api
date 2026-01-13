@@ -1,3 +1,4 @@
+#app\controllers\voice_generations_controller.rb
 class VoiceGenerationsController < ApplicationController
   def index
     @voice_generations = VoiceGeneration.recent

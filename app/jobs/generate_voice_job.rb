@@ -1,43 +1,32 @@
 # app/jobs/generate_voice_job.rb
-
 class GenerateVoiceJob < ApplicationJob
   queue_as :voice_generation
 
   def perform(voice_gen_id)
     voice_gen = VoiceGeneration.find(voice_gen_id)
-    voice_gen.generating!
+    voice_gen.processing!
 
-    # 🔊 Generate audio
-    audio_data = ElevenLabs::TextToSpeech.call(
+    result = ElevenLabs::TextToSpeech.call(
       text: voice_gen.text,
-      voice_id: voice_gen.elevenlabs_voice_id
+      voice_id: Rails.application.credentials.dig(:elevenlabs, :voice_id)
     )
+     debugger
+    audio_data = result[:audio]
 
-    # ☁️ Upload to Cloudinary
-    upload = Cloudinary::Uploader.upload(
-      StringIO.new(audio_data),
-      resource_type: :video,
-      format: "mp3"
+    voice_gen.audio_file.attach(
+      io: StringIO.new(audio_data),
+      filename: "voice_#{voice_gen.id}.mp3",
+      content_type: "audio/mpeg"
     )
-
-    # ✅ Save result
-    voice_gen.update!(
-      status: :completed,
-      audio_url: upload["secure_url"]
-    )
-
+   
+    voice_gen.update!(audio_file: audio_data)
+    voice_gen.completed!
     Rails.logger.info("✅ VoiceGeneration #{voice_gen.id} completed")
 
-  rescue ActiveRecord::RecordNotFound
-    Rails.logger.warn("VoiceGeneration #{voice_gen_id} not found")
-
-  rescue StandardError => e
-    voice_gen&.update!(
-      status: :failed,
-      error_message: e.message
-    )
-
+  rescue => e
+    voice_gen&.failed!
+    voice_gen&.update!(error_message: e.message)
     Rails.logger.error("❌ GenerateVoiceJob failed: #{e.message}")
-    raise e # allow Sidekiq retry
+    raise e
   end
 end

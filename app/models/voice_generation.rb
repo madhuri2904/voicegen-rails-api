@@ -8,9 +8,10 @@ class VoiceGeneration < ApplicationRecord
   
   enum :status, {
     pending: "pending",
-    generating: "generating", 
+    processing: "processing",
     completed: "completed",
     failed: "failed"
+    
   }
 
   scope :recent, -> { order(created_at: :desc).limit(50) }
@@ -31,7 +32,7 @@ class VoiceGeneration < ApplicationRecord
   def human_status
     case status
     when "pending" then "⏳ Pending"
-    when "generating" then "🎙️ Generating"
+    when "processing" then "🎙️ Processing"
     when "completed" then "✅ Completed"
     when "failed" then "❌ Failed"
     end

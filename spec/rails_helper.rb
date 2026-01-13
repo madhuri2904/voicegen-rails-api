@@ -10,6 +10,20 @@ abort("The Rails environment is running in production mode!") if Rails.env.produ
 require 'rspec/rails'
 require "active_job/test_helper"
 
+SimpleCov.start "rails" do
+  enable_coverage :branch
+  add_filter "/spec/"
+  add_filter "/config/"
+  add_filter "/vendor/"
+  add_filter '/app/helpers/'
+  add_filter '/app/mailers/'
+
+  add_group "Controllers", "app/controllers"
+  add_group "Models", "app/models"
+  add_group "Jobs", "app/jobs"
+  add_group "Services", "app/services"
+end
+
 RSpec.configure do |config|
   config.include ActiveJob::TestHelper
 

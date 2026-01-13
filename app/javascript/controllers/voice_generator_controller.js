@@ -44,7 +44,7 @@ export default class extends Controller {
   
   pollStatus(id) {
     this.pollInterval = setInterval(() => {
-      fetch(`/api/v1/voice_generations/${id}/status`)
+      fetch(`/api/voice_generations/${id}/status`)
         .then(r => r.json())
         .then(data => this.updateStatus(data))
     }, 1500)

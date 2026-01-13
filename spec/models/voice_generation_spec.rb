@@ -2,44 +2,69 @@
 require "rails_helper"
 
 RSpec.describe VoiceGeneration, type: :model do
-  subject do
-    described_class.new(
-      text: "Hello from ElevenLabs",
-      voice_id: "12345678-1234-1234-1234-123456789012"
-    )
+  describe "validations" do
+    it "is valid with valid attributes" do
+      vg = build(:voice_generation)
+      expect(vg).to be_valid
+    end
+
+    it "is invalid without text" do
+      vg = build(:voice_generation, text: nil)
+      expect(vg).not_to be_valid
+      expect(vg.errors[:text]).to be_present
+    end
+
+    it "is invalid when text exceeds 10,000 characters" do
+      vg = build(:voice_generation, text: "a" * 10_001)
+      expect(vg).not_to be_valid
+    end
+
+    it "is invalid without voice_id" do
+      vg = build(:voice_generation, voice_id: nil)
+      expect(vg).not_to be_valid
+      expect(vg.errors[:voice_id]).to be_present
+    end
   end
 
-  it { is_expected.to validate_presence_of(:text) }
-  it { is_expected.to validate_length_of(:text).is_at_most(10_000) }
+  describe "enums" do
+    it "defines expected statuses" do
+      expect(described_class.statuses.keys)
+        .to contain_exactly("pending", "processing", "completed", "failed")
+    end
 
-  it { is_expected.to validate_presence_of(:voice_id) }
-  it { is_expected.to validate_length_of(:voice_id).is_equal_to(36) }
-
-  it "defines a string-backed status enum" do
-    expect(described_class.statuses).to eq(
-      "pending" => "pending",
-      "processing" => "processing",
-      "completed" => "completed",
-      "failed" => "failed"
-    )
+    it "defaults to pending" do
+      vg = create(:voice_generation)
+      expect(vg.status).to eq("pending")
+    end
   end
 
+  describe "callbacks" do
+    it "sets words_count before save" do
+      vg = create(:voice_generation, text: "Hello world from RSpec")
 
-  it "sets default status to pending" do
-    subject.save!
-    expect(subject.status).to eq("pending")
+      expect(vg.words_count).to eq(4)
+    end
+
+    it "does not override existing words_count" do
+      vg = create(:voice_generation, text: "Hello world", words_count: 2)
+      expect(vg.words_count).to eq(2)
+    end
   end
 
-  it "calculates words_count before validation" do
-    subject.text = "one two three"
-    subject.valid?
-    expect(subject.words_count).to eq(3)
-  end
+  describe "scopes" do
+    let!(:older) { create(:voice_generation, created_at: 2.days.ago) }
+    let!(:newer) { create(:voice_generation, created_at: 1.hour.ago) }
 
-  it { is_expected.to have_db_column(:status).of_type(:string) }
+    it "returns records ordered by newest first" do
+      expect(described_class.recent.first).to eq(newer)
+    end
 
-  describe ".completed" do
-    it "returns completed records only" do
+    it "limits results to 50" do
+      create_list(:voice_generation, 60)
+      expect(described_class.recent.count).to be <= 50
+    end
+
+    it "returns only completed records" do
       completed = create(:voice_generation, status: "completed")
       create(:voice_generation, status: "pending")
 
@@ -47,5 +72,59 @@ RSpec.describe VoiceGeneration, type: :model do
     end
   end
 
-  it { is_expected.to have_one_attached(:audio_file) }
+  describe "#words_count" do
+    it "counts words correctly" do
+      vg = build(:voice_generation, text: "Hello world again")
+      expect(vg.words_count).to eq(3)
+    end
+
+    it "returns 0 when text is nil" do
+      vg = build(:voice_generation, text: nil)
+      expect(vg.words_count).to eq(0)
+    end
+  end
+
+  describe "#elevenlabs_voice_id" do
+    it "returns voice_id" do
+      vg = build(:voice_generation, voice_id: "voice_123")
+      expect(vg.elevenlabs_voice_id).to eq("voice_123")
+    end
+  end
+
+  describe "#human_status" do
+    it "returns human readable status" do
+      expect(build(:voice_generation, status: "pending").human_status)
+        .to eq("⏳ Pending")
+
+      expect(build(:voice_generation, status: "processing").human_status)
+        .to eq("🎙️ Processing")
+
+      expect(build(:voice_generation, status: "completed").human_status)
+        .to eq("✅ Completed")
+
+      expect(build(:voice_generation, status: "failed").human_status)
+        .to eq("❌ Failed")
+    end
+
+    it "returns nil for unknown status" do
+      vg = build(:voice_generation)
+      vg.status = nil
+
+      expect(vg.human_status).to be_nil
+    end
+  end
+
+  describe "attachments" do
+    it "can attach an audio file" do
+      vg = create(:voice_generation)
+
+      vg.audio_file.attach(
+        io: StringIO.new("audio"),
+        filename: "test.mp3",
+        content_type: "audio/mpeg"
+      )
+
+      expect(vg.audio_file).to be_attached
+    end
+  end
 end

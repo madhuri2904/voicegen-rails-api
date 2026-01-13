@@ -9,7 +9,7 @@
   <% if @voice_generations.any? %>
     <div class="space-y-6">
       <% @voice_generations.each do |vg| %>
-        <div class="glass-card">
+        <div class="glass-card" data-voice-id="<%= vg.id %>">
           <!-- Status Badge -->
           <div class="flex flex-wrap items-start gap-4 mb-6">
             <span style="padding: 0.5rem 1rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; 
@@ -43,7 +43,7 @@
             </div>
 
           <!-- Loading Spinner -->
-          <% elsif vg.pending? || vg.generating? %>
+          <% elsif vg.pending? || vg.processing? %>
             <div style="display: flex; align-items: center; gap: 1rem; padding: 1.5rem; background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 16px;">
               <div style="width: 32px; height: 32px; border: 3px solid #f59e0b; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
               <div>

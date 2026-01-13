@@ -14,8 +14,6 @@ module ElevenLabs
     end
 
     def call
-      Rails.logger.info("🔥 ElevenLabs runtime base URL: #{ElevenLabs::Client.connection.url_prefix}")
-
       response = ElevenLabs::Client.connection.post("text-to-speech/#{@voice_id}/stream") do |req|
         req.headers["Accept"] = "audio/mpeg"
         req.headers["Content-Type"] = "application/json"
