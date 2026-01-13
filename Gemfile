@@ -62,6 +62,7 @@ group :test do
 end
 
 gem "faraday"
+gem "faraday-retry"
 gem "httparty"
 gem "sidekiq"
 gem "redis", "~> 5.0"
@@ -72,3 +73,5 @@ gem "stimulus-rails"
 gem "turbo-rails"
 gem "hotwire-livereload"
 gem "rack-attack"
+gem 'kaminari'
+gem "tailwindcss-rails", "~> 2.0"

@@ -1,41 +1,90 @@
-<div class="container mx-auto p-8 max-w-4xl">
-  <h1 class="text-4xl font-bold mb-8">📜 Voice Generation History</h1>
-  
-  <div class="overflow-x-auto">
-    <table class="w-full bg-white shadow-md rounded-lg">
-      <thead>
-        <tr class="bg-gray-50">
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Text Preview</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% VoiceGeneration.recent.each do |vg| %>
-          <tr class="border-b">
-            <td class="px-6 py-4"><%= vg.created_at.strftime("%b %d, %H:%M") %></td>
-            <td class="px-6 py-4 max-w-xs truncate"><%= vg.text.truncate(50) %></td>
-            <td class="px-6 py-4">
-              <span class="px-2 py-1 text-xs rounded-full <%= status_badge_class(vg.status) %>">
-                <%= vg.status.titleize %>
-              </span>
-            </td>
-            <td class="px-6 py-4"><%= vg.duration || "N/A" %>s</td>
-            <td class="px-6 py-4">
-              <% if vg.completed? && vg.audio_file.attached? %>
-                <%= link_to "🎧 Play", rails_blob_url(vg.audio_file, expires_in: 1.hour), 
-                           class: "text-blue-600 hover:underline mr-2" %>
-                <%= link_to "💾 Download", rails_blob_url(vg.audio_file, expires_in: 1.hour), 
-                           class: "text-green-600 hover:underline" %>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+<div class="container">
+  <div class="text-center mb-12">
+    <h1 class="text-5xl md:text-7xl font-black mb-4" style="background: linear-gradient(135deg, #374151, #4b5563); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+      📜 History
+    </h1>
+    <p class="text-2xl text-gray-600">(<%= @voice_generations.count %> total voices)</p>
   </div>
-  
-  <%= link_to "← Back to Generator", root_path, class: "mt-8 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700" %>
+
+  <% if @voice_generations.any? %>
+    <div class="space-y-6">
+      <% @voice_generations.each do |vg| %>
+        <div class="glass-card">
+          <!-- Status Badge -->
+          <div class="flex flex-wrap items-start gap-4 mb-6">
+            <span style="padding: 0.5rem 1rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; 
+                         background: <%= case vg.status
+                           when 'pending' then '#dbeafe'; when 'generating' then '#fef3c7'; 
+                           when 'completed' then '#dcfce7'; else '#fee2e2' end %>; 
+                         color: <%= case vg.status
+                           when 'pending' then '#1e40af'; when 'generating' then '#92400e'; 
+                           when 'completed' then '#166534'; else '#dc2626' end %>;">
+              <%= vg.human_status %>
+            </span>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-xl font-bold text-gray-900"><%= vg.text.truncate(80) %></h3>
+              <p class="text-gray-600 text-sm">
+                <%= vg.created_at.strftime("%b %d, %H:%M") %> • 
+                <%= vg.words_count %> words
+              </p>
+            </div>
+          </div>
+
+          <!-- Audio Player -->
+          <% if vg.completed? && vg.audio_file.attached? %>
+            <div class="space-y-4">
+              <audio controls class="audio-player" style="width: 100%; margin: 1.5rem 0; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <source src="<%= url_for(vg.audio_file) %>" type="audio/mpeg">
+                Your browser doesn't support audio.
+              </audio>
+              <%= link_to "💾 Download MP3", url_for(vg.audio_file), 
+                  style: "background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.875rem 1.5rem; border-radius: 12px; font-weight: 600; text-decoration: none; display: inline-block; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); transition: all 0.3s;", 
+                  download: "voice_#{vg.id}.mp3" %>
+            </div>
+
+          <!-- Loading Spinner -->
+          <% elsif vg.pending? || vg.generating? %>
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1.5rem; background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 16px;">
+              <div style="width: 32px; height: 32px; border: 3px solid #f59e0b; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+              <div>
+                <h4 class="font-bold text-lg" style="color: #92400e; margin: 0;">🎙️ <%= vg.human_status %></h4>
+                <p style="color: #92400e; margin: 0.25rem 0 0 0;">High-quality AI processing (10-30 seconds)</p>
+              </div>
+            </div>
+
+          <!-- Error State -->
+          <% else %>
+            <div style="padding: 1.5rem; background: linear-gradient(135deg, #fee2e2, #fecaca); border-radius: 16px; border-left: 4px solid #ef4444;">
+              <p style="color: #dc2626; font-weight: 600; margin: 0;">
+                ❌ <%= vg.human_status %>: <%= vg.error_message.truncate(100) %>
+              </p>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-24 glass-card max-w-2xl mx-auto">
+      <div style="font-size: 6rem; opacity: 0.3; margin-bottom: 2rem; line-height: 1;">📭</div>
+      <h2 class="text-4xl font-black text-gray-800 mb-6">No voices yet</h2>
+      <%= link_to "🎙️ Create Your First Voice", root_path, 
+          style: "background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 1.25rem 2.5rem; border-radius: 16px; font-weight: 700; font-size: 1.25rem; text-decoration: none; display: inline-block; box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);" %>
+    </div>
+  <% end %>
+
+  <!-- Back Button -->
+  <div class="text-center mt-12">
+    <%= link_to "← New Voice", root_path, 
+        style: "background: linear-gradient(135deg, #6b7280, #4b5563); color: white; padding: 1rem 2rem; border-radius: 16px; font-weight: 600; font-size: 1.125rem; text-decoration: none; box-shadow: 0 10px 25px rgba(107, 114, 128, 0.3); display: inline-block;" %>
+  </div>
 </div>
+
+<style>
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.flex { display: flex; }
+.items-center { align-items: center; }
+.gap-4 { gap: 1rem; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>

@@ -1,15 +1,14 @@
 class VoiceGeneration < ApplicationRecord
   validates :text, presence: true, length: { maximum: 10_000 }
-  validates :voice_id, presence: true, length: { is: 36 }
+  validates :voice_id, presence: true
   
   has_one_attached :audio_file
   
-  before_validation :set_words_count
-  before_create :set_initial_status
+  before_save :set_words_count
   
   enum :status, {
     pending: "pending",
-    processing: "processing",
+    generating: "generating", 
     completed: "completed",
     failed: "failed"
   }
@@ -25,11 +24,16 @@ class VoiceGeneration < ApplicationRecord
     self[:words_count] ||= words_count
   end
   
-  def set_initial_status
-    self.status ||= :pending
-  end
-  
   def elevenlabs_voice_id
     voice_id
+  end
+
+  def human_status
+    case status
+    when "pending" then "⏳ Pending"
+    when "generating" then "🎙️ Generating"
+    when "completed" then "✅ Completed"
+    when "failed" then "❌ Failed"
+    end
   end
 end

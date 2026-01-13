@@ -1,4 +1,4 @@
 web: bin/rails server -p 3000
 js: bin/dev
 css: bin/dev
-sidekiq: bundle exec sidekiq
+sidekiq: bundle exec sidekiqcss: bin/rails tailwindcss:watch

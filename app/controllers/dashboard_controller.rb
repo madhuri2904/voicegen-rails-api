@@ -4,6 +4,6 @@ class DashboardController < ApplicationController
   end
   
   def history
-    @voice_generations = VoiceGeneration.recent
+    @voice_generations = VoiceGeneration.all.order(created_at: :desc)
   end
 end

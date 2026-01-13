@@ -1,78 +1,87 @@
 import { Controller } from "@hotwired/stimulus"
-import consumer from "../channels/consumer"
 
 export default class extends Controller {
-  static targets = ["form", "statusContainer", "statusMessage", "audioPlayer", "downloadLink"]
+  static targets = [ "form", "statusContainer", "statusMessage", "audioPlayer", "downloadLink" ]
   
   connect() {
-    this.pollInterval = null
+    console.log("🎙️ VoiceGenerator connected")
   }
   
   generate(event) {
     event.preventDefault()
     
-    const formData = new FormData(this.formTarget)
-    this.showStatus("Generating voice...")
+    // Client-side validation
+    const text = this.formTarget.querySelector("[name*='text']").value.trim()
+    if (!text) {
+      this.showStatus("⚠️ Please enter some text first!", "error")
+      return
+    }
     
-    fetch("/api/voice_generations", {
+    this.showStatus("🚀 Creating voice generation request...")
+    this.disableForm()
+    
+    const formData = new FormData(this.formTarget)
+    
+    fetch(this.formTarget.action, {
       method: "POST",
-      body: formData
+      body: formData,
+      headers: { "X-Requested-With": "XMLHttpRequest" }
     })
     .then(response => response.json())
     .then(data => {
-      this.currentGenerationId = data.id
-      this.pollStatus(data.id)
+      if (data.id) {
+        this.currentId = data.id
+        this.pollStatus(data.id)
+      } else {
+        this.showStatus("❌ Failed to create generation", "error")
+      }
     })
     .catch(error => {
-      this.showStatus("Error generating voice. Please try again.")
-      console.error("Generation error:", error)
+      this.showStatus("❌ Network error. Please try again.", "error")
+      this.enableForm()
     })
   }
   
-  pollStatus(generationId) {
+  pollStatus(id) {
     this.pollInterval = setInterval(() => {
-      fetch(`/api/voice_generations/${generationId}/status`)
-        .then(response => response.json())
-        .then(data => {
-          this.updateStatus(data.status, data.audio_url, data.error)
-          
-          if (data.status === "completed" || data.status === "failed") {
-            clearInterval(this.pollInterval)
-          }
-        })
-    }, 1000)
+      fetch(`/api/v1/voice_generations/${id}/status`)
+        .then(r => r.json())
+        .then(data => this.updateStatus(data))
+    }, 1500)
   }
   
-  updateStatus(status, audioUrl, error) {
-    if (status === "completed" && audioUrl) {
-      this.statusMessageTarget.textContent = "✅ Voice generated successfully!"
-      this.audioPlayerTarget.src = audioUrl
-      this.downloadLinkTarget.href = audioUrl
-      this.audioPlayerTarget.classList.remove("hidden")
-      this.downloadLinkTarget.classList.remove("hidden")
-    } else if (status === "failed") {
-      this.statusMessageTarget.textContent = `Generation failed: ${error}`
-    } else {
-      this.statusMessageTarget.textContent = `⏳ ${this.statusMessage(status)}`
+  updateStatus(data) {
+    const messages = {
+      pending: "📝 Preparing voice generation...",
+      generating: "🎙️ Generating high-quality audio with AI...",
+      completed: "✅ Voice ready! 🎉",
+      failed: `❌ Failed: ${data.error}`
+    }
+    
+    this.statusMessageTarget.textContent = messages[data.status] || "⏳ Processing..."
+    this.statusMessageTarget.className = `text-2xl font-bold text-center mb-8 ${data.status}`
+    
+    if (data.status === "completed" && data.audio_url) {
+      this.audioPlayerTarget.src = data.audio_url
+      this.downloadLinkTarget.href = data.audio_url
+      this.audioPlayerContainerTarget.classList.remove("hidden")
+      clearInterval(this.pollInterval)
+    } else if (data.status === "failed") {
+      clearInterval(this.pollInterval)
+      this.enableForm()
     }
   }
   
-  showStatus(message) {
+  showStatus(message, type = "info") {
     this.statusContainerTarget.classList.remove("hidden")
     this.statusMessageTarget.textContent = message
   }
   
-  statusMessage(status) {
-    const messages = {
-      "pending": "Preparing voice generation...",
-      "generating": "🎙️ Generating audio...",
-      "completed": "✅ Ready!",
-      "failed": "Failed"
-    }
-    return messages[status] || `Status: ${status}`
+  disableForm() {
+    this.formTarget.querySelector("button[type=submit]").disabled = true
   }
   
-  disconnect() {
-    if (this.pollInterval) clearInterval(this.pollInterval)
+  enableForm() {
+    this.formTarget.querySelector("button[type=submit]").disabled = false
   }
 }
