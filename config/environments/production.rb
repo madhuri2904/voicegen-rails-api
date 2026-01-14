@@ -94,5 +94,5 @@ Rails.application.configure do
   config.serve_static_assets = true
   config.public_file_server.enabled = true
   config.secret_key_base = ENV.fetch("SECRET_KEY_BASE", Rails.application.credentials.secret_key_base)
-  config.hosts << /.*\.up\.railway\.app/
+  config.hosts.clear
 end
