@@ -88,7 +88,7 @@ Rails.application.configure do
   config.cache_classes = true
 
   # Database
-  config.active_record.sqlite3_production_warning = false
+  # config.active_record.sqlite3_production_warning = false
   
   # Performance
   config.serve_static_assets = true
