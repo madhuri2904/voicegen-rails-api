@@ -1,4 +1,13 @@
+require "sidekiq/web"
+
+Sidekiq::Web.use Rack::Auth::Basic do |user, password|
+  ActiveSupport::SecurityUtils.secure_compare(user, ENV["SIDEKIQ_USER"]) &
+    ActiveSupport::SecurityUtils.secure_compare(password, ENV["SIDEKIQ_PASSWORD"])
+end
+
 Rails.application.routes.draw do
+  mount Sidekiq::Web => "/sidekiq"
+
   # Frontend routes
   root "dashboard#index"
   get "history", to: "dashboard#history", as: :history
