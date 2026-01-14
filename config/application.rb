@@ -15,5 +15,6 @@ module VoicegenRailsApi
 
     # Disable host authorization for Railway (API-only app)
     config.middleware.delete ActionDispatch::HostAuthorization
+    config.active_job.queue_adapter = :sidekiq
   end
 end
