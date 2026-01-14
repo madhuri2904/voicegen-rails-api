@@ -1,8 +1,16 @@
 FROM ruby:3.2.3
-RUN apt-get update -qq && apt-get install -y nodejs postgresql-client
-WORKDIR /voicegen
-COPY Gemfile* ./
+
+WORKDIR /app
+
+RUN apt-get update -qq && apt-get install -y build-essential nodejs
+
+COPY Gemfile Gemfile.lock ./
 RUN bundle install
+
 COPY . .
-RUN bin/rails assets:precompile assets:clean
-CMD ["sh", "-c", "rm -f tmp/pids/server.pid && bin/rails server -b 0.0.0.0"]
+
+ENV RAILS_ENV=production
+
+RUN bundle exec rails assets:precompile
+
+CMD ["sh", "-c", "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p ${PORT:-3000}"]
