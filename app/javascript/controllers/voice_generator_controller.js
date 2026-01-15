@@ -53,7 +53,7 @@ export default class extends Controller {
   updateStatus(data) {
     const messages = {
       pending: "📝 Preparing voice generation...",
-      generating: "🎙️ Generating high-quality audio with AI...",
+      processing: "🎙️ Generating high-quality audio with AI...",
       completed: "✅ Voice ready! 🎉",
       failed: `❌ Failed: ${data.error}`
     }

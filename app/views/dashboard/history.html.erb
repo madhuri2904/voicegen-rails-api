@@ -14,10 +14,10 @@
           <div class="flex flex-wrap items-start gap-4 mb-6">
             <span style="padding: 0.5rem 1rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; 
                          background: <%= case vg.status
-                           when 'pending' then '#dbeafe'; when 'generating' then '#fef3c7'; 
+                           when 'pending' then '#dbeafe'; when 'processing' then '#fef3c7'; 
                            when 'completed' then '#dcfce7'; else '#fee2e2' end %>; 
                          color: <%= case vg.status
-                           when 'pending' then '#1e40af'; when 'generating' then '#92400e'; 
+                           when 'pending' then '#1e40af'; when 'processing' then '#92400e'; 
                            when 'completed' then '#166534'; else '#dc2626' end %>;">
               <%= vg.human_status %>
             </span>
