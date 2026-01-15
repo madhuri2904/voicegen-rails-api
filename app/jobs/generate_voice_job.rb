@@ -10,16 +10,13 @@ class GenerateVoiceJob < ApplicationJob
       text: voice_gen.text,
       voice_id: Rails.application.credentials.dig(:elevenlabs, :voice_id)
     )
-     debugger
-    audio_data = result[:audio]
 
     voice_gen.audio_file.attach(
-      io: StringIO.new(audio_data),
+      io: StringIO.new(result),
       filename: "voice_#{voice_gen.id}.mp3",
       content_type: "audio/mpeg"
     )
    
-    voice_gen.update!(audio_file: audio_data)
     voice_gen.completed!
     Rails.logger.info("✅ VoiceGeneration #{voice_gen.id} completed")
 
