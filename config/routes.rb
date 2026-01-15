@@ -1,8 +1,8 @@
 require "sidekiq/web"
 
 Sidekiq::Web.use Rack::Auth::Basic do |user, password|
-  sidekiq_user = ENV["SIDEKIQ_USER"]
-  sidekiq_pass = ENV["SIDEKIQ_PASSWORD"]
+  user == ENV["SIDEKIQ_USER"]
+  password == ENV["SIDEKIQ_PASSWORD"]
 end
 
 
