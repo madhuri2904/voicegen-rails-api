@@ -3,9 +3,6 @@ require "sidekiq/web"
 Sidekiq::Web.use Rack::Auth::Basic do |user, password|
   sidekiq_user = ENV["SIDEKIQ_USER"]
   sidekiq_pass = ENV["SIDEKIQ_PASSWORD"]
-  
-  ActiveSupport::SecurityUtils.secure_compare(user, sidekiq_user) &&
-    ActiveSupport::SecurityUtils.secure_compare(password, sidekiq_pass)
 end
 
 
