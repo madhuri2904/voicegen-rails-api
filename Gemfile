@@ -75,3 +75,5 @@ gem "hotwire-livereload"
 gem "rack-attack"
 gem 'kaminari'
 gem "tailwindcss-rails", "~> 2.0"
+gem "rack-session"
+gem "rack-protection"
