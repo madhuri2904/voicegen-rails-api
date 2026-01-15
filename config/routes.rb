@@ -1,8 +1,9 @@
 require "sidekiq/web"
 
-authenticate :user do  # ✅ Requires logged-in user
+authenticate :user do  # Requires logged-in user
   mount Sidekiq::Web => "/sidekiq"
 end
+
 
 Rails.application.routes.draw do
 
